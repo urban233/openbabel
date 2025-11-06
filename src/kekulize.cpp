@@ -41,7 +41,7 @@ namespace OpenBabel
   class Kekulizer
   {
   public:
-    Kekulizer(OBMol* mol) : m_mol(mol), needs_dbl_bond((OBBitVec*)0), doubleBonds((OBBitVec*)0), kekule_system((OBBitVec*)0)
+    Kekulizer(OBMol* mol) : m_mol(mol), needs_dbl_bond(nullptr), doubleBonds(nullptr), kekule_system(nullptr)
     {
       atomArraySize = GetMaxAtomIdx(m_mol) + 1;
       bondArraySize = GetMaxBondIdx(m_mol) + 1;
@@ -74,8 +74,9 @@ namespace OpenBabel
       if (atom->GetTotalDegree() == 3 && atom->GetFormalCharge() == 0)
         return true;
       break;
-    case 16: // e.g. Cs1(=O)ccccn1
-      if (atom->GetTotalDegree() == 4 && atom->GetFormalCharge() == 0)
+    case 16: // e.g. Cs1(=O)ccccn1 but not O=s1(=O)cccn1
+      if (atom->GetTotalDegree() == 4 && atom->GetFormalCharge() == 0
+          && atom->GetTotalValence() < 6)
         return true;
       break;
     }

@@ -1,9 +1,9 @@
 # Library versioning
-set(SOVERSION 6)
-set(LIBRARY_VERSION 6.0.0)
+set(SOVERSION 7)
+set(LIBRARY_VERSION 7.0.0)
 
 
-find_package(Boost 1.45.0 COMPONENTS system) 
+find_package(Boost 1.45.0 COMPONENTS system)
 
 
 
@@ -79,6 +79,7 @@ set(ops
   ops/gen3d.cpp
   ops/largest.cpp
   ops/loader.cpp
+  ops/neutralize.cpp
   ops/opsplit.cpp
   ops/optransform.cpp
   ops/partialcharges.cpp
@@ -105,6 +106,7 @@ set(stereo_srcs
   stereo/tetrahedral.cpp
   stereo/perception.cpp
   stereo/facade.cpp
+  stereo/gen3dstereohelper.cpp
 )
 
 set(openbabel_srcs
@@ -249,15 +251,13 @@ add_library(openbabel ${BUILD_TYPE}
 
 target_link_libraries(openbabel ${libs})
 if(Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS}) 
-    target_link_libraries(openbabel ${Boost_LIBRARIES} )
+    include_directories(${Boost_INCLUDE_DIRS})
+endif()
+
+if(BUILD_SHARED OR BUILD_MIXED)
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
-    if(THREADS_HAVE_PTHREAD_ARG)
-      target_compile_options(PUBLIC openbabel "-pthread")
-    endif()
-    if(CMAKE_THREAD_LIBS_INIT)
-      target_link_libraries(openbabel "${CMAKE_THREAD_LIBS_INIT}")
-    endif()
+    target_link_libraries(openbabel Threads::Threads)
 endif()
 
 set_target_properties(openbabel PROPERTIES
