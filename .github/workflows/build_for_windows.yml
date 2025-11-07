@@ -41,8 +41,8 @@ jobs:
         set INCHIDIR=%GITHUB_WORKSPACE%\msvc-dependencies\inchi
         set JAVADIR=C:\Program Files\Java\jdk-11
         set SWIGDIR=%GITHUB_WORKSPACE%\swig
-        mkdir build
-        cd build
+        mkdir "${{ runner.workspace }}\build"
+        cd "${{ runner.workspace }}\build"
         cmake.exe .. -DCMAKE_INSTALL_PREFIX=..\install ^
           -G "Visual Studio 16 2019" -A "Win32" ^
           -DOB_USE_PREBUILT_LIBRARIES=ON ^
@@ -69,13 +69,15 @@ jobs:
     - name: Build OpenBabel (Windows)
       if: runner.os == 'Windows'
       shell: cmd
-      run: cmake --build build --config Release
+      run: cmake --build . --config Release
+      working-directory: ${{ runner.workspace }}/build
 
     - name: Install OpenBabel (Windows)
       if: runner.os == 'Windows'
       shell: cmd
       run: |
-        cmake --install build --prefix install --config Release
+        cmake --install . --prefix install --config Release
+      working-directory: ${{ runner.workspace }}/build
 
     - name: Copy required DLLs
       if: runner.os == 'Windows'
