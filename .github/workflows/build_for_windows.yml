@@ -1,0 +1,80 @@
+name: build_for_windows.yml
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    steps:
+    - name: Install MSVC Command Prompt
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x86
+
+    - name: Download prebuilt dependencies
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        $depsZip = "$Env:GITHUB_WORKSPACE\msvc-dependencies.zip"
+        Invoke-WebRequest -Uri "https://github.com/timvdm/msvc-dependencies/archive/master.zip" -OutFile $depsZip
+        Expand-Archive -LiteralPath $depsZip -DestinationPath "$Env:GITHUB_WORKSPACE"
+        Rename-Item -Path "$Env:GITHUB_WORKSPACE\msvc-dependencies-master" -NewName "msvc-dependencies"
+
+    - name: Configure OpenBabel (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        REM Set paths to prebuilt dependencies
+        set DEPS=%GITHUB_WORKSPACE%\msvc-dependencies
+        set INCHIDIR=%GITHUB_WORKSPACE%\msvc-dependencies\inchi
+        set JAVADIR=C:\Program Files\Java\jdk-11
+        set SWIGDIR=%GITHUB_WORKSPACE%\swig
+        mkdir build
+        cd build
+        cmake.exe .. -DCMAKE_INSTALL_PREFIX=..\install ^
+          -G "Visual Studio 16 2019" -A "Win32" ^
+          -DOB_USE_PREBUILT_LIBRARIES=ON ^
+          -DLIBXML2_LIBRARIES="%DEPS%\libs-common\i386\libxml2.lib" ^
+          -DLIBXML2_INCLUDE_DIR="%DEPS%\include" ^
+          -DZLIB_LIBRARY="%DEPS%\libs-common\i386\zlib1.lib" ^
+          -DZLIB_INCLUDE_DIR="%DEPS%\include" ^
+          -DCAIRO_INCLUDE_DIRS="%DEPS%\include\cairo" ^
+          -DCAIRO_LIBRARIES="%DEPS%\libs-common\i386\cairo.lib" ^
+          -DINCHI_LIBRARY="%DEPS%\libs-common\i386\libinchi.lib" ^
+          -DINCHI_INCLUDE_DIR="%INCHIDIR%\INCHI-1-SRC\INCHI_API\libinchi\src" ^
+          -DXDR_LIBRARY="%DEPS%\libs-common\i386\xdr.lib" ^
+          -DXDR_INCLUDE_DIR="%DEPS%\include" ^
+          -DRUN_SWIG=ON ^
+          -DPYTHON_BINDINGS=ON ^
+          -DJAVA_BINDINGS=ON ^
+          -DCSHARP_BINDINGS=ON ^
+          -DENABLE_TESTS=OFF ^
+          -DBUILD_GUI=ON ^
+          -DOPENBABEL_USE_SYSTEM_INCHI=TRUE ^
+          -DwxWidgets_CONFIGURATION=mswu ^
+          -DEIGEN3_INCLUDE_DIR="%DEPS%\include"
+
+    - name: Build OpenBabel (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: cmake --build build --config Release
+
+    - name: Install OpenBabel (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        cmake --install build --prefix install --config Release
+
+    - name: Copy required DLLs
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        REM Copy runtime DLLs so obabel.exe can run
+        xcopy /y "%DEPS%\libs-common\i386\*.dll" "install\bin\"
+        xcopy /y "%DEPS%\libs-common\x64\*.dll" "install\bin\"
+
+    - name: Package OpenBabel (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: cmake -E tar "cJfv" "%GITHUB_WORKSPACE%\Windows-MSVC.tar.xz" -C install .
