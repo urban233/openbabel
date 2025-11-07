@@ -98,15 +98,28 @@ jobs:
 
     - name: Pack
       if: matrix.config.artifact != 0
-      run: cmake -E tar cJfv ../${{ matrix.config.artifact }} .
+      run: cmake -E tar cJfv ${{ runner.workspace }}/instdir/${{ matrix.config.artifact }} .
       working-directory: ${{ runner.workspace }}/instdir
 
     - name: Upload
       if: matrix.config.artifact != 0
       uses: actions/upload-artifact@v4
       with:
-        path: ${{ runner.workspace }}/instdir/../${{ matrix.config.artifact }}
+        path: ${{ runner.workspace }}/instdir/${{ matrix.config.artifact }}
         name: ${{ matrix.config.artifact }}
+
+
+#    - name: Pack
+#      if: matrix.config.artifact != 0
+#      run: cmake -E tar cJfv ../${{ matrix.config.artifact }} .
+#      working-directory: ${{ runner.workspace }}/instdir
+#
+#    - name: Upload
+#      if: matrix.config.artifact != 0
+#      uses: actions/upload-artifact@v4
+#      with:
+#        path: ${{ runner.workspace }}/instdir/../${{ matrix.config.artifact }}
+#        name: ${{ matrix.config.artifact }}
 
 #    - name: Setup tmate debugging session
 #      if: ${{ failure() }}
