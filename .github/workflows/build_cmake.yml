@@ -108,6 +108,16 @@ jobs:
       shell: bash
       working-directory: ${{ runner.workspace }}/build
 
+#    - name: Test
+#      if: runner.os != 'Windows'
+#      working-directory: ${{ runner.workspace }}/build
+#      run: ctest --output-on-failure
+
+    - name: Install Strip
+      if: matrix.config.artifact != 0
+      run: cmake --install build --prefix instdir --strip
+      working-directory: ${{ runner.workspace }}
+
     - name: Copy DLLs to bin directory (Windows)
       if: runner.os == 'Windows'
       shell: bash
@@ -115,9 +125,9 @@ jobs:
         # The bin directory where EXE files are generated
         BIN_DIR="${{ runner.workspace }}/instdir/${{ matrix.config.artifact }}/bin"
         # mkdir -p "$BIN_DIR"
-        
+
         echo "Copying DLLs to $BIN_DIR"
-        
+
         # Copy DLLs from msvc-dependencies directory structure
         # These directories match the structure in timvdm/msvc-dependencies
         for dll_dir in \
@@ -130,21 +140,11 @@ jobs:
             find "$dll_dir" -maxdepth 1 -name "*.dll" -exec cp -v {} "$BIN_DIR/" \; 2>/dev/null || true
           fi
         done
-        
+
         # List what was copied
         echo ""
         echo "DLLs now in bin directory:"
         ls -lh "$BIN_DIR"/*.dll 2>/dev/null || echo "Warning: No DLLs found"
-
-#    - name: Test
-#      if: runner.os != 'Windows'
-#      working-directory: ${{ runner.workspace }}/build
-#      run: ctest --output-on-failure
-
-    - name: Install Strip
-      if: matrix.config.artifact != 0
-      run: cmake --install build --prefix instdir --strip
-      working-directory: ${{ runner.workspace }}
 
     - name: Pack
       if: matrix.config.artifact != 0
