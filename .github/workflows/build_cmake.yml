@@ -123,7 +123,7 @@ jobs:
       shell: bash
       run: |
         # The bin directory where EXE files are generated
-        BIN_DIR="${{ runner.workspace }}/instdir/${{ matrix.config.artifact }}/bin"
+        BIN_DIR="${{ runner.workspace }}/instdir/bin"
         # mkdir -p "$BIN_DIR"
 
         echo "Copying DLLs to $BIN_DIR"
