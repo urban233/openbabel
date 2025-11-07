@@ -108,6 +108,34 @@ jobs:
       shell: bash
       working-directory: ${{ runner.workspace }}/build
 
+    - name: Copy DLLs to bin directory (Windows)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        # The bin directory where EXE files are generated
+        BIN_DIR="${{ runner.workspace }}/build/bin"
+        mkdir -p "$BIN_DIR"
+        
+        echo "Copying DLLs to $BIN_DIR"
+        
+        # Copy DLLs from msvc-dependencies directory structure
+        # These directories match the structure in timvdm/msvc-dependencies
+        for dll_dir in \
+          "$GITHUB_WORKSPACE/$DEPS/libs-common/i386" \
+          "$GITHUB_WORKSPACE/$DEPS/bin/i386" \
+          "$GITHUB_WORKSPACE/$DEPS/libs-vs12/i386" \
+          "$GITHUB_WORKSPACE/$DEPS/wx/lib/vc120_dll"; do
+          if [ -d "$dll_dir" ]; then
+            echo "Checking for DLLs in: $dll_dir"
+            find "$dll_dir" -maxdepth 1 -name "*.dll" -exec cp -v {} "$BIN_DIR/" \; 2>/dev/null || true
+          fi
+        done
+        
+        # List what was copied
+        echo ""
+        echo "DLLs now in bin directory:"
+        ls -lh "$BIN_DIR"/*.dll 2>/dev/null || echo "Warning: No DLLs found"
+
 #    - name: Test
 #      if: runner.os != 'Windows'
 #      working-directory: ${{ runner.workspace }}/build
