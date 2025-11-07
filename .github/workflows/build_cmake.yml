@@ -85,8 +85,8 @@ jobs:
     - name: Configure (macOS)
       if: runner.os == 'macOS'
       run: |
-        mkdir -p build
-        cd build
+        mkdir -p "${{ runner.workspace }}/build"
+        cd "${{ runner.workspace }}/build"
         cmake $GITHUB_WORKSPACE -GNinja \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++ \
