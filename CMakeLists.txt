@@ -1,7 +1,7 @@
 # Please ensure that any changes remain compliant with 3.1.
 if(NOT EMBED_OPENBABEL)
 #  cmake_minimum_required(VERSION 3.1)
-  cmake_minimum_required(VERSION 3.10)
+  cmake_minimum_required(VERSION 3.10) # Needed for macOS build
 endif()
 
 project(openbabel)
@@ -12,7 +12,8 @@ set (CMAKE_CXX_STANDARD 11)
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
   if(POLICY CMP0042)
-    cmake_policy(SET CMP0042 OLD)
+#    cmake_policy(SET CMP0042 OLD)
+    cmake_policy(SET CMP0042 NEW) # Needed for macOS build
   endif()
 endif()
 
