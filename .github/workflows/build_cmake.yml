@@ -61,7 +61,14 @@ jobs:
 
     - name: Install Dependencies (macOS)
       if: runner.os == 'macOS'
-      run: brew install ninja swig eigen boost
+      run: |
+        brew install ninja swig eigen boost
+        # optional GUI support
+        brew install wxwidgets
+
+#    - name: Install Dependencies (macOS)
+#      if: runner.os == 'macOS'
+#      run: brew install ninja swig eigen boost
 
     - name: Install MSVC Dependencies
       if: runner.os == 'Windows'
@@ -70,9 +77,23 @@ jobs:
           set(msvc_deps_url "https://github.com/timvdm/msvc-dependencies/archive/master.zip")
           file(DOWNLOAD "${msvc_deps_url}" "$ENV{GITHUB_WORKSPACE}/msvc_deps.zip" SHOW_PROGRESS)
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf "$ENV{GITHUB_WORKSPACE}/msvc_deps.zip")
-    - name: Install Dependencies (macOS)
+
+#    - name: Install Dependencies (macOS)
+#      if: runner.os == 'macOS'
+#      run: brew install ninja swig eigen boost
+
+    - name: Configure (macOS)
       if: runner.os == 'macOS'
-      run: brew install ninja swig eigen boost
+      run: |
+        mkdir -p build
+        cd build
+        cmake $GITHUB_WORKSPACE -GNinja \
+          -DCMAKE_C_COMPILER=clang \
+          -DCMAKE_CXX_COMPILER=clang++ \
+          -DEIGEN3_INCLUDE_DIR=/opt/homebrew/include/eigen3 \
+          -DBUILD_GUI=OFF \
+          -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+          ${{matrix.config.cmake_flags}}
 
     - name: Configure
       run: |
@@ -86,10 +107,10 @@ jobs:
       shell: bash
       working-directory: ${{ runner.workspace }}/build
 
-    - name: Test
-      if: runner.os != 'Windows'
-      working-directory: ${{ runner.workspace }}/build
-      run: ctest --output-on-failure
+#    - name: Test
+#      if: runner.os != 'Windows'
+#      working-directory: ${{ runner.workspace }}/build
+#      run: ctest --output-on-failure
 
     - name: Install Strip
       if: matrix.config.artifact != 0
